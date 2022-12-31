@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+
+LC_ALL=C
+LANG=C
+
+cmd=$1
+service=/etc/sv
+serv_where=/var/service
+[ -z "$cmd" ] && echo "Error: Please provide a command or use --help for more info" && exit 1
+[[ $cmd != "list" && $cmd != "--h" && $cmd != "--help" && -z "$2" ]] && {
+    echo "Error: Please provide the service name"
+    exit 1
+}
+
+check_installed() {
+    [ ! -d "$service/$2" ] && {
+        echo "Error: Service $2 isn't installed on your computer"
+        exit 1
+    }
+}
+
+help() {
+    echo -n "service - Void Linux service manager
+
+Commands
+    link [SERVICE]      - Link a service with the current one
+    unlink [SERVICE]    - Unlink a service from the current one
+    relink [SERVICE]    - Relink a service, if previous one is broken
+    lnstat [SERVICE]    - Check service status
+    start [SERVICE]     - Start a service
+    restart [SERVICE]   - Restart a service
+    stop [SERVICE]      - Stop a service
+    status [SERVICE]    - Check service status through sv
+    list                - List all currently linked services
+"
+}
+
+main() {
+    case $cmd in
+        link)
+            check_installed "$@"
+            ln -s "$service/$2" "$service/$2"
+            ;;
+        
+        unlink)
+            check_installed "$@"
+            rm -rf "$serv_where/$2"
+            ;;
+        
+        relink)
+            check_installed "$@"
+            ln -sf "$service/$2" "$serv_where/$2"
+            ;;
+        
+        lnstat)
+            check_installed "$@"
+            if [ -L "$serv_where/$2" ]; then
+                if [ -e "$serv_where/$2" ]; then
+                    echo "$2 is working fine"
+                else
+                    echo "$2 symbolic link is broken"
+                fi
+            fi
+            ;;
+
+        start)
+            check_installed "$@"
+            sv start $2
+            ;;
+        
+        restart)
+            check_installed "$@"
+            sv restart $2
+            ;;
+        
+        stop)
+            check_installed "$@"
+            sv stop $2
+            ;;
+
+        status)
+            check_installed "$@"
+            sv status $2
+            ;;
+
+        list)
+            i=0
+            count=$(echo -e $(ls /etc/runit/runsvdir/current) | tr " " "\n" | wc -l)
+            while [ $i -le $count ]; do
+                i=$((i + 1))
+            done
+            echo -e $i $(ls /etc/runit/runsvdir/current) | tr " " "\n"
+            ;;
+        
+        --help|--h) help ;;
+
+        *) help ;;
+    esac
+}
+
+main "$@"
