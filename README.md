@@ -19,3 +19,5 @@ Commands
 Since Void uses runit, so it doesn't really have a separate service manager, like in SystemD, we've `systemctl`. All of it has an `sv` (service) command but it can be a little difficult to use for the first time, also it doesn't manage service enabling to disabling. So this script comes in handy!
 
 Basically, it just links to `/var/service` to enable a service and unlinks (remove symbolic link from `/var/service`) to disable a service.
+
+I may rename the repo with something else when I'll add more scripts in this repo!
